@@ -10,16 +10,44 @@ import { StyleSheet,
         //  Platform
         } from 'react-native';
 import { ToastAndroid } from 'react-native';
+import { YellowBox }  from 'react-native';
+
+
+
+
 export default class App extends Component {
 
   state = {
     unit: 'mmol/L',
     glucoseLevel: 10.0,
-    diabeticStatus: 'healthy'
+    diabeticStatus: 'healthy',
+    dataMean: null,
+    dataStd: null,
+    plotData: {
+      y: Array.from({length: 100}, ()=> Math.random()),
+      type: 'box'
+    }
   }
 
   onPress = () => {
-    ToastAndroid.show("Pushed calculate", ToastAndroid.SHORT);
+    
+    this.getData();
+    console.log(this.state.dataMean);
+    // ToastAndroid.show(this.state.dataMean,ToastAndroid.SHORT);
+  }
+
+  
+
+  getData = () => {
+    fetch('https://dashin.eu/easme/api/calculation?study_code=Diclofenac&arg=mean&axis=0',{
+      method: 'GET',
+      headers: {
+        authorization: 'Token ***REMOVED***'
+      }
+    })
+    .then((response) => response.json())
+    .then((responseJson) => this.setState({dataMean: responseJson}))
+    .catch((error) => console.log(error));
   }
 
   render(){
@@ -28,7 +56,9 @@ export default class App extends Component {
         behavior="padding" 
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
-            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%'}}/>
+            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%'}}>
+              <WebView source={{uri: 'https://www.google.com'}}></WebView>
+            </View>
             <View style={{ backgroundColor: 'pink', width: '100%',height:'10%' }}>
               <View style={{ flex: 1, flexDirection: 'row'}}>
                 <View style={{ flex: 1, justifyContent:'center',backgroundColor:'white' }}>
@@ -90,6 +120,7 @@ export default class App extends Component {
 
 
 }
+
 
 const styles = StyleSheet.create({
 
