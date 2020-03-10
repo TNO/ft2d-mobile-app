@@ -7,13 +7,13 @@ import { StyleSheet,
          KeyboardAvoidingView,
          TouchableOpacity,
          Keyboard,
+         YellowBox
         //  Platform
         } from 'react-native';
-import { ToastAndroid } from 'react-native';
-import { YellowBox }  from 'react-native';
 
 
-
+// Use statistics.js to get the distribution 
+// then plot 
 
 export default class App extends Component {
 
@@ -21,33 +21,63 @@ export default class App extends Component {
     unit: 'mmol/L',
     glucoseLevel: 10.0,
     diabeticStatus: 'healthy',
-    dataMean: null,
-    dataStd: null,
+    dataMean: null, 
+    dataStd: null, 
+    dataSkew: null, 
     plotData: {
       y: Array.from({length: 100}, ()=> Math.random()),
       type: 'box'
+    },
+    plotState: {
+      visibility: 'none'
     }
   }
 
   onPress = () => {
-    
-    this.getData();
-    console.log(this.state.dataMean);
-    // ToastAndroid.show(this.state.dataMean,ToastAndroid.SHORT);
+    this.getMean();
+    this.getStd();
+    this.getSkew();
+    if(this.state.plotState.visibility == 'none'){
+      this.setState({plotState:{ visibility:'block'}})
+    } else {
+      this.setState({plotState:{ visibility: 'none'}})
+    }
   }
 
-  
-
-  getData = () => {
-    fetch('https://dashin.eu/easme/api/calculation?study_code=Diclofenac&arg=mean&axis=0',{
+  /*
+  * This method gets the statistics frorm EASME server
+  * name is a pandas.DataFrame method 
+  * axis is the axis that method is applied to
+  */
+  getRequest = (name: String, axis: Number): Promise<Response> => {
+    return  fetch(`https://dashin.eu/easme/api/calculation?study_code=Diclofenac&arg=${name}&axis=${axis}`,{
       method: 'GET',
       headers: {
-        authorization: 'Token ***REMOVED***'
+        authorization: 'Token ***REMOVED***',
+        mode: 'cors'
       }
     })
+  }
+
+  getMean = () => {
+    this.getRequest('mean', 0)
     .then((response) => response.json())
-    .then((responseJson) => this.setState({dataMean: responseJson}))
-    .catch((error) => console.log(error));
+    .then((responseJson) => this.setState({ dataMean: responseJson}))
+    .catch((err) => console.log(err))
+  }
+
+  getStd = () => {
+    this.getRequest('std', 0)
+    .then((response) => response.json())
+    .then((responseJson) => this.setState({ dataStd: responseJson}))
+    .catch((err) => console.log(err))
+  }
+
+  getSkew = () => {
+    this.getRequest('skew',0)
+    .then((response) => response.json())
+    .then((responseJson) => this.setState({ dataStd: responseJson}))
+    .catch((err) => console.log(err))
   }
 
   render(){
@@ -56,8 +86,15 @@ export default class App extends Component {
         behavior="padding" 
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
-            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%'}}>
-              <WebView source={{uri: 'https://www.google.com'}}></WebView>
+            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
+              <View style={{ backgroundColor: 'grey', flex:1 }}>
+                <View style={{ width: 30, height: 100, backgroundColor:'red', marginLeft: '50%', opacity: '30%', display: this.state.plotState.visibility }}></View>
+              </View>
+              <View style={{ backgroundColor: 'orange', flex:1 }}>
+                <View style={{ flex:1 }}>
+                  
+                </View>
+              </View>
             </View>
             <View style={{ backgroundColor: 'pink', width: '100%',height:'10%' }}>
               <View style={{ flex: 1, flexDirection: 'row'}}>
@@ -117,18 +154,6 @@ export default class App extends Component {
       </KeyboardAvoidingView>
     )
   }
-
-
 }
 
 
-const styles = StyleSheet.create({
-
-  mainView:{ 
-    backgroundColor: 'powderblue',
-    flex:1,
-    flexDirection: 'column',
-    
-  }
-
-});
