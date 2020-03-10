@@ -8,12 +8,7 @@ import { StyleSheet,
          TouchableOpacity,
          Keyboard,
          YellowBox
-        //  Platform
         } from 'react-native';
-
-
-// Use statistics.js to get the distribution 
-// then plot 
 
 export default class App extends Component {
 
@@ -22,26 +17,40 @@ export default class App extends Component {
     glucoseLevel: 10.0,
     diabeticStatus: 'healthy',
     dataMean: null, 
-    dataStd: null, 
-    dataSkew: null, 
-    plotData: {
-      y: Array.from({length: 100}, ()=> Math.random()),
-      type: 'box'
-    },
-    plotState: {
-      visibility: 'none'
+    dataVariance: null,
+    plotVisibility: 'none',
+    plot: {
+      visibility: 'none',
+      quantiles: {
+        0.1: null,
+        0.25: null,
+        0.5: null, 
+        0.75: null, 
+        0.9: null, 
+        min: null, 
+        max: null
+      },
+      canvasLayout: {
+        x: null, 
+        y: null, 
+        width: null, 
+        height: null
+      }
     }
   }
 
   onPress = () => {
-    this.getMean();
-    this.getStd();
-    this.getSkew();
-    if(this.state.plotState.visibility == 'none'){
-      this.setState({plotState:{ visibility:'block'}})
-    } else {
-      this.setState({plotState:{ visibility: 'none'}})
+    // this.getSkew();
+    if(this.state.plot.visibility == 'none'){
+      this.setState({plot:{ visibility:'flex'}})
+    } 
+    if (this.state.plot.visibility == 'flex'){
+      this.setState({plot:{ visibility: 'none'}})
     }
+    this.getGlucoseData();
+    console.log(this.state.plot.quantiles);
+    // console.log(this.state.plot.canvasLayout);
+    // console.log(this.state.plot.canvasLayout)
   }
 
   /*
@@ -49,35 +58,115 @@ export default class App extends Component {
   * name is a pandas.DataFrame method 
   * axis is the axis that method is applied to
   */
-  getRequest = (name: String, axis: Number): Promise<Response> => {
-    return  fetch(`https://dashin.eu/easme/api/calculation?study_code=Diclofenac&arg=${name}&axis=${axis}`,{
+  private getRequest = (args: Object): Promise<Response> => {
+    let requestArguments = [];
+    for(let [key,value] of Object.entries(args)){
+      requestArguments.push(`${key}=${value}`);
+    }
+    let allArguments = requestArguments.join("&");
+    return  fetch(`https://dashin.eu/easme/api/calculation?study_code=Diclofenac&${allArguments}`,{
       method: 'GET',
       headers: {
         authorization: 'Token ***REMOVED***',
-        mode: 'cors'
       }
     })
   }
 
-  getMean = () => {
-    this.getRequest('mean', 0)
+  private getGlucoseData = () => {
+
+    this.getRequest({arg: 'quantile', q: 0.1})
     .then((response) => response.json())
-    .then((responseJson) => this.setState({ dataMean: responseJson}))
-    .catch((err) => console.log(err))
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles,
+          0.1: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'quantile', q: 0.25})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles,
+          0.25: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'quantile', q: 0.5})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles,
+          0.5: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'quantile', q: 0.75})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles,
+          0.75: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'quantile', q: 0.9})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles,
+          0.9: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'min'})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles, 
+          min: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
+    this.getRequest({arg: 'max'})
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot: {
+        quantiles: {
+          ...this.state.plot.quantiles, 
+          max: resJson.Glu0
+        }
+      }
+    })).catch((err) => console.log(err));
+
   }
 
-  getStd = () => {
-    this.getRequest('std', 0)
-    .then((response) => response.json())
-    .then((responseJson) => this.setState({ dataStd: responseJson}))
-    .catch((err) => console.log(err))
+  getPlotCanvasDimensions = (layout) => {
+    const {x, y, width, height} = layout;
+    this.setState({plot: {
+      canvasLayout: {
+        x: x,
+        y: y,
+        width: width,
+        height: height
+      }
+    }});
   }
 
-  getSkew = () => {
-    this.getRequest('skew',0)
-    .then((response) => response.json())
-    .then((responseJson) => this.setState({ dataStd: responseJson}))
-    .catch((err) => console.log(err))
+  getDisplayProp = () => {
+    return this.state.plot.visibility;
   }
 
   render(){
@@ -87,12 +176,13 @@ export default class App extends Component {
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
             <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
-              <View style={{ backgroundColor: 'grey', flex:1 }}>
-                <View style={{ width: 30, height: 100, backgroundColor:'red', marginLeft: '50%', opacity: '30%', display: this.state.plotState.visibility }}></View>
+              <View style={{ backgroundColor: 'grey', flex:1 }}
+                    onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}
+                    >
+                <View style={{ width: 30, height: 100, backgroundColor:'red', marginLeft: '50%', display: this.getDisplayProp()  }}></View>
               </View>
               <View style={{ backgroundColor: 'orange', flex:1 }}>
                 <View style={{ flex:1 }}>
-                  
                 </View>
               </View>
             </View>
@@ -155,5 +245,3 @@ export default class App extends Component {
     )
   }
 }
-
-
