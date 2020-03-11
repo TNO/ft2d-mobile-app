@@ -1,3 +1,4 @@
+import Svg, { Circle, Rect } from 'react-native-svg';
 import React, { Component } from 'react';
 import { StyleSheet, 
          Text, 
@@ -9,8 +10,24 @@ import { StyleSheet,
          Keyboard,
          YellowBox
         } from 'react-native';
+import BarChart from './BarChart';
 
 export default class App extends Component {
+
+  plotData = [
+    { label: 'Jan', value: 500 },
+    { label: 'Feb', value: 312 },
+    { label: 'Mar', value: 424 },
+    { label: 'Apr', value: 745 },
+    { label: 'May', value: 89 },
+    { label: 'Jun', value: 434 },
+    { label: 'Jul', value: 650 },
+    { label: 'Aug', value: 980 },
+    { label: 'Sep', value: 123 },
+    { label: 'Oct', value: 186 },
+    { label: 'Nov', value: 689 },
+    { label: 'Dec', value: 643 }
+  ];
 
   state = {
     unit: 'mmol/L',
@@ -18,7 +35,7 @@ export default class App extends Component {
     diabeticStatus: 'healthy',
     dataMean: null, 
     dataVariance: null,
-    plotVisibility: 'none',
+    // plotVisibility: 'none',
     plot: {
       visibility: 'none',
       quantiles: {
@@ -169,17 +186,17 @@ export default class App extends Component {
     return this.state.plot.visibility;
   }
 
+
   render(){
     return(
       <KeyboardAvoidingView 
         behavior="padding" 
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
-            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
-              <View style={{ backgroundColor: 'grey', flex:1 }}
-                    onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}
-                    >
-                <View style={{ width: 30, height: 100, backgroundColor:'red', marginLeft: '50%', display: this.getDisplayProp()  }}></View>
+            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}
+                  onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}>
+              <View style={{ backgroundColor: 'grey', flex:1 }}>
+                <BarChart data={this.plotData}/>
               </View>
               <View style={{ backgroundColor: 'orange', flex:1 }}>
                 <View style={{ flex:1 }}>
@@ -245,3 +262,4 @@ export default class App extends Component {
     )
   }
 }
+
