@@ -1,4 +1,4 @@
-import Svg, { Circle, Rect } from 'react-native-svg';
+import Svg, { Circle, Rect, Line } from 'react-native-svg';
 import React, { Component } from 'react';
 import { StyleSheet, 
          Text, 
@@ -10,35 +10,16 @@ import { StyleSheet,
          Keyboard,
          YellowBox
         } from 'react-native';
-import BarChart from './BarChart';
+
 
 export default class App extends Component {
-
-  plotData = [
-    { label: 'Jan', value: 500 },
-    { label: 'Feb', value: 312 },
-    { label: 'Mar', value: 424 },
-    { label: 'Apr', value: 745 },
-    { label: 'May', value: 89 },
-    { label: 'Jun', value: 434 },
-    { label: 'Jul', value: 650 },
-    { label: 'Aug', value: 980 },
-    { label: 'Sep', value: 123 },
-    { label: 'Oct', value: 186 },
-    { label: 'Nov', value: 689 },
-    { label: 'Dec', value: 643 }
-  ];
 
   state = {
     unit: 'mmol/L',
     glucoseLevel: 10.0,
     diabeticStatus: 'healthy',
-    dataMean: null, 
-    dataVariance: null,
-    // plotVisibility: 'none',
     plot: {
-      visibility: 'none',
-      quantiles: {
+      data: {
         0.1: null,
         0.25: null,
         0.5: null, 
@@ -47,27 +28,24 @@ export default class App extends Component {
         min: null, 
         max: null
       },
-      canvasLayout: {
-        x: null, 
-        y: null, 
-        width: null, 
-        height: null
-      }
+      show: false,
+      x: null, 
+      y: null, 
+      width: null, 
+      height: null
     }
   }
 
-  onPress = () => {
-    // this.getSkew();
-    if(this.state.plot.visibility == 'none'){
-      this.setState({plot:{ visibility:'flex'}})
-    } 
-    if (this.state.plot.visibility == 'flex'){
-      this.setState({plot:{ visibility: 'none'}})
-    }
+  componentDidMount(){
     this.getGlucoseData();
-    console.log(this.state.plot.quantiles);
-    // console.log(this.state.plot.canvasLayout);
-    // console.log(this.state.plot.canvasLayout)
+  }
+
+  onPress = () => {
+    this.setState({plot:{
+      ...this.state.plot,
+      show: true}});
+    console.log(this.state.plot.data);
+
   }
 
   /*
@@ -95,8 +73,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles,
+        data: {
+          ...this.state.plot.data,
           0.1: resJson.Glu0
         }
       }
@@ -106,8 +84,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles,
+        data: {
+          ...this.state.plot.data,
           0.25: resJson.Glu0
         }
       }
@@ -117,8 +95,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles,
+        data: {
+          ...this.state.plot.data,
           0.5: resJson.Glu0
         }
       }
@@ -128,8 +106,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles,
+        data: {
+          ...this.state.plot.data,
           0.75: resJson.Glu0
         }
       }
@@ -139,8 +117,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles,
+        data: {
+          ...this.state.plot.data,
           0.9: resJson.Glu0
         }
       }
@@ -150,8 +128,8 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles, 
+        data: {
+          ...this.state.plot.data, 
           min: resJson.Glu0
         }
       }
@@ -161,42 +139,69 @@ export default class App extends Component {
     .then((response) => response.json())
     .then((resJson) => this.setState({
       plot: {
-        quantiles: {
-          ...this.state.plot.quantiles, 
+        data: {
+          ...this.state.plot.data, 
           max: resJson.Glu0
         }
       }
-    })).catch((err) => console.log(err));
+    }))
+    .then(() => console.log(this.state.plot.data))
+    .catch((err) => console.log(err));
 
   }
 
   getPlotCanvasDimensions = (layout) => {
+    console.log('on layout called');
     const {x, y, width, height} = layout;
     this.setState({plot: {
-      canvasLayout: {
+        ...this.state.plot,
         x: x,
         y: y,
         width: width,
         height: height
-      }
     }});
+    console.log(this.state.plot);
+
+    // const {x, y, width, height} = layout;
+    // this.setState({plot: {
+    //     ...this.state.plot,
+    //     x: x,
+    //     y: y,
+    //     width: width,
+    //     height: height
+    // }});
+    
   }
 
-  getDisplayProp = () => {
-    return this.state.plot.visibility;
+  drawLines(){
+    return [1,2,3,4,5,6,7,8,9,10].map((i)=>{
+      return(
+        <Line x1={i*10} y1={0} x2={i*10} y2={20} stroke='black'></Line>
+      )
+    })
   }
-
-
+  
   render(){
     return(
       <KeyboardAvoidingView 
         behavior="padding" 
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
-            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}
-                  onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}>
-              <View style={{ backgroundColor: 'grey', flex:1 }}>
-                <BarChart data={this.plotData}/>
+            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
+              <View style={{ backgroundColor: 'grey', flex:1,height:'100%' }}
+                    onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}>
+                { this.state.plot.show ? (
+                    <Svg 
+                      style={{backgroundColor: 'white', flex:1}}
+                    >
+                      {this.drawLines()}
+                      {/* <Line x1={10} y1={0} x2={10} y2={20} stroke="black"></Line> */}
+                    </Svg>
+
+                ) : null }
+
+
+                
               </View>
               <View style={{ backgroundColor: 'orange', flex:1 }}>
                 <View style={{ flex:1 }}>
@@ -262,4 +267,3 @@ export default class App extends Component {
     )
   }
 }
-
