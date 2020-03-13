@@ -17,7 +17,7 @@ export default class App extends Component {
 
   state = {
     unit: 'mmol/L',
-    glucoseLevel: 10.0,
+    glucoseLevel: null,
     diabeticStatus: 'healthy',
     plot: {
       data: {
@@ -162,14 +162,7 @@ export default class App extends Component {
         width: width,
         height: height
     }});
-    console.log(this.state.plot);
-    // this.setState({
-    //   plot: {
-    //     data: {
-    //       ...this.state.plot.data, 
-    //       min: 40
-    //     }
-    //   }});
+
   }
 
   generateCoordTransformer(minReal,maxReal,minScale,maxScale){
@@ -186,19 +179,6 @@ export default class App extends Component {
     }
     return arr;
   }
-
-  // createYAxis(x){
-  //   let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-  //     this.state.plot.data.max, 40, 250);
-  //   let y1 = transformer(this.state.plot.data.min);
-  //   let y2 = transformer(this.state.plot.data.max);
-  //   return(<Line 
-  //             x1={x}
-  //             y1={y1}
-  //             x2={x}
-  //             y2={y2}
-  //             stroke='black'/>)
-  // }
 
   createYTicks(x,n){
     let yr = this.linspace(this.state.plot.data.min, this.state.plot.data.max,n);
@@ -270,8 +250,25 @@ export default class App extends Component {
     
   }
 
+  createGlucoseLevelIndicator(x,m){
+    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+      this.state.plot.data.max, 40, 250);
+    if(this.state.glucoseLevel != null){
+      let y = transformer(this.state.glucoseLevel);
+      return(<Line
+        x1={x}
+        y1={y}
+        x2={x+m}
+        y2={y}
+        strokeWidth={3}
+        stroke='red'/>); 
+    } else {
+      return null;
+    }
+    
+  }
 
-
+  
 
 
   render(){
@@ -291,6 +288,7 @@ export default class App extends Component {
                       {this.createBox(60)}
                       {this.createIQRLine(60)}
                       {this.createMedianLine(60,95)}
+                      {this.createGlucoseLevelIndicator(60,95)}
 
                     </Svg>
 
@@ -311,7 +309,7 @@ export default class App extends Component {
                   selectedValue={this.state.diabeticStatus}
                   onValueChange={(val) => {this.setState({diabeticStatus:val})}}
                   itemStyle={{ fontSize: 25, alignItems: 'center'}}>
-                    <Picker.Item label="healthy" value="healthy"></Picker.Item>
+                    <Picker.Item label="not diabetic" value="not diabetic"></Picker.Item>
                     <Picker.Item label="diabetic" value="diabetic"></Picker.Item>
                   </Picker>
                 </View>
@@ -331,7 +329,7 @@ export default class App extends Component {
                   <TextInput style={{ fontSize: 35, textAlign: 'center'}} 
                             keyboardType='decimal-pad'
                             onChangeText={(level) => {
-                              this.setState({glucoseLevel: Number.parseFloat(level)});
+                              this.setState({glucoseLevel: level.length == 0 ? null : Number.parseFloat(level)});
                               }}
                               onEndEditing={() => Keyboard.dismiss()}>
                   </TextInput>
