@@ -54,7 +54,7 @@ export default class App extends Component {
   * name is a pandas.DataFrame method 
   * axis is the axis that method is applied to
   */
-  private getRequest = (args: Object): Promise<Response> => {
+  getRequest = (args: Object): Promise<Response> => {
     let requestArguments = [];
     for(let [key,value] of Object.entries(args)){
       requestArguments.push(`${key}=${value}`);
@@ -68,7 +68,7 @@ export default class App extends Component {
     })
   }
 
-  private getGlucoseData = () => {
+  getGlucoseData = () => {
 
     this.getRequest({arg: 'quantile', q: 0.1})
     .then((response) => response.json())
@@ -131,7 +131,8 @@ export default class App extends Component {
       plot: {
         data: {
           ...this.state.plot.data, 
-          min: resJson.Glu0
+          // min: resJson.Glu0
+          min: 65
         }
       }
     })).catch((err) => console.log(err));
@@ -162,67 +163,116 @@ export default class App extends Component {
         height: height
     }});
     console.log(this.state.plot);
-    
-  }
-
-  drawLines(){
-    return [1,2,3,4,5,6,7,8,9,10].map((i)=>{
-      return(
-        <Line x1={i*10} y1={0} x2={i*10} y2={20} stroke='black'></Line>
-      )
-    })
-  }
-
-  createYTickLines(x){
-    let transformer = 
-        this.generateCoordTransformer(this.state.plot.data.min, 
-                                      this.state.plot.data.max, 
-                                      40,
-                                      300);
-    let vmin = transformer(this.state.plot.data.min);
-    let vmax = transformer(this.state.plot.data.max);
-    console.log(vmin);
-    console.log(vmax);
-    let d = (vmax - vmin)/5;
-    let dReal = (this.state.plot.data.max - this.state.plot.data.min)/5;
-    let yPoints = [];
-    let yReal = [];
-
-    for(let i = 0; i < 5; i++){
-      yPoints.push(vmin + d*i);
-      yReal.push(this.state.plot.data.min + dReal*i);
-    }
-    let ticks = [];
-    for(let i = 0; i < 5; i++){
-      ticks.push(<S.Text x={x-5} y={yPoints[i]+4} textAnchor='end'>{`${yReal[i].toFixed(1)}`}</S.Text>);
-      ticks.push(
-        <Line 
-          x1={x}
-          x2={x+5}
-          y1={yPoints[i]}
-          y2={yPoints[i]}
-          stroke='black'
-          strokeWidth={1}
-          />
-      );
-    }
-    ticks.push(<Line 
-      x1={x+5}
-      x2={x+5}
-      y1={yPoints[0]}
-      y2={yPoints[yPoints.length-1]}
-      stroke='black'
-      strokeWidth={1}
-      />)
-    return ticks;
-
+    // this.setState({
+    //   plot: {
+    //     data: {
+    //       ...this.state.plot.data, 
+    //       min: 40
+    //     }
+    //   }});
   }
 
   generateCoordTransformer(minReal,maxReal,minScale,maxScale){
     return (x) => {
-      return (((x-minReal)/(maxReal-minReal))*(maxScale-minScale) + minScale);
+      return ((1-((x-minReal)/(maxReal-minReal)))*(maxScale-minScale) + minScale);
     }
   }
+
+  linspace(min,max,n){
+    let d = (max - min)/n;
+    let arr = [];
+    for(let i = 0; i < n; i++){
+      arr.push(min + d*i);
+    }
+    return arr;
+  }
+
+  // createYAxis(x){
+  //   let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+  //     this.state.plot.data.max, 40, 250);
+  //   let y1 = transformer(this.state.plot.data.min);
+  //   let y2 = transformer(this.state.plot.data.max);
+  //   return(<Line 
+  //             x1={x}
+  //             y1={y1}
+  //             x2={x}
+  //             y2={y2}
+  //             stroke='black'/>)
+  // }
+
+  createYTicks(x,n){
+    let yr = this.linspace(this.state.plot.data.min, this.state.plot.data.max,n);
+    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+      this.state.plot.data.max, 40, 250);
+    let yp = yr.map((v) => transformer(v));
+    let ticks = [];
+    for(let i = 0; i < n; i++){
+      ticks.push(<S.Text x={x-5} y={yp[i]+4} textAnchor='end'>{`${yr[i].toFixed(1)}`}</S.Text>);
+      ticks.push(<Line 
+                  x1={x}
+                  y1={yp[i]}
+                  x2={x-5}
+                  y2={yp[i]}
+                  stroke='black'
+                  />)
+    }
+    ticks.push(<Line 
+                  x1={x}
+                  y1={yp[0]}
+                  x2={x}
+                  y2={yp[yp.length-1]}
+                  stroke='black'/>)
+    return ticks;
+  }
+
+  createBox(x){
+    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+      this.state.plot.data.max, 40, 250);
+    let y1 = transformer(this.state.plot.data["0.75"]);
+    let y2 = transformer(this.state.plot.data["0.25"]);
+    return(<Rect 
+              x={x}
+              y={y2}
+              height={y1-y2}
+              width={80}
+              opacity={0.4}/>)
+  }
+
+  createIQRLine(x){
+    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+      this.state.plot.data.max, 40, 250);
+    let iqr = this.state.plot.data[0.75] - this.state.plot.data[0.25];
+    let vmin = this.state.plot.data[0.25] - 1.5*iqr;
+    let vmax = this.state.plot.data[0.75] + 1.5*iqr; 
+    let y1 = transformer(vmin);
+    let y2 = transformer(vmax);
+    console.log(vmin);
+    console.log(vmax);
+    return(<Rect 
+      x={x}
+      y={y2}
+      height={y1-y2}
+      width={10}
+      opacity={0.4}/>) 
+  }
+
+  createMedianLine(x,m){
+    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
+      this.state.plot.data.max, 40, 250);
+    let y = transformer(this.state.plot.data["0.5"]);
+    return(<Line
+              x1={x}
+              y1={y}
+              x2={x+m}
+              y2={y}
+              strokeWidth={2}
+              stroke='black'/>)
+    
+  }
+
+
+
+
 
   render(){
     return(
@@ -237,15 +287,14 @@ export default class App extends Component {
                     <Svg 
                       style={{backgroundColor: 'white', flex:1}}
                     >
-                      
-                      {this.createYTickLines(45)}
-                      
+                      {this.createYTicks(50,6)}
+                      {this.createBox(60)}
+                      {this.createIQRLine(60)}
+                      {this.createMedianLine(60,95)}
+
                     </Svg>
 
                 ) : null }
-
-
-                
               </View>
               <View style={{ backgroundColor: 'orange', flex:1 }}>
                 <View style={{ flex:1 }}>
