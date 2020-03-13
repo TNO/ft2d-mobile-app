@@ -1,4 +1,5 @@
 import Svg, { Circle, Rect, Line } from 'react-native-svg';
+import * as S from 'react-native-svg';
 import React, { Component } from 'react';
 import { StyleSheet, 
          Text, 
@@ -161,15 +162,6 @@ export default class App extends Component {
         height: height
     }});
     console.log(this.state.plot);
-
-    // const {x, y, width, height} = layout;
-    // this.setState({plot: {
-    //     ...this.state.plot,
-    //     x: x,
-    //     y: y,
-    //     width: width,
-    //     height: height
-    // }});
     
   }
 
@@ -180,7 +172,58 @@ export default class App extends Component {
       )
     })
   }
-  
+
+  createYTickLines(x){
+    let transformer = 
+        this.generateCoordTransformer(this.state.plot.data.min, 
+                                      this.state.plot.data.max, 
+                                      40,
+                                      300);
+    let vmin = transformer(this.state.plot.data.min);
+    let vmax = transformer(this.state.plot.data.max);
+    console.log(vmin);
+    console.log(vmax);
+    let d = (vmax - vmin)/5;
+    let dReal = (this.state.plot.data.max - this.state.plot.data.min)/5;
+    let yPoints = [];
+    let yReal = [];
+
+    for(let i = 0; i < 5; i++){
+      yPoints.push(vmin + d*i);
+      yReal.push(this.state.plot.data.min + dReal*i);
+    }
+    let ticks = [];
+    for(let i = 0; i < 5; i++){
+      ticks.push(<S.Text x={x-5} y={yPoints[i]+4} textAnchor='end'>{`${yReal[i].toFixed(1)}`}</S.Text>);
+      ticks.push(
+        <Line 
+          x1={x}
+          x2={x+5}
+          y1={yPoints[i]}
+          y2={yPoints[i]}
+          stroke='black'
+          strokeWidth={1}
+          />
+      );
+    }
+    ticks.push(<Line 
+      x1={x+5}
+      x2={x+5}
+      y1={yPoints[0]}
+      y2={yPoints[yPoints.length-1]}
+      stroke='black'
+      strokeWidth={1}
+      />)
+    return ticks;
+
+  }
+
+  generateCoordTransformer(minReal,maxReal,minScale,maxScale){
+    return (x) => {
+      return (((x-minReal)/(maxReal-minReal))*(maxScale-minScale) + minScale);
+    }
+  }
+
   render(){
     return(
       <KeyboardAvoidingView 
@@ -194,8 +237,9 @@ export default class App extends Component {
                     <Svg 
                       style={{backgroundColor: 'white', flex:1}}
                     >
-                      {this.drawLines()}
-                      {/* <Line x1={10} y1={0} x2={10} y2={20} stroke="black"></Line> */}
+                      
+                      {this.createYTickLines(45)}
+                      
                     </Svg>
 
                 ) : null }
