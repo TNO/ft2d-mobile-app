@@ -9,7 +9,7 @@ import { StyleSheet,
          KeyboardAvoidingView,
          TouchableOpacity,
          Keyboard,
-         YellowBox
+        //  YellowBox
         } from 'react-native';
 
 
@@ -21,21 +21,33 @@ export default class App extends Component {
     diabeticStatus: 'healthy',
     plot: {
       data: {
-        0.1: null,
-        0.25: null,
-        0.5: null, 
-        0.75: null, 
-        0.9: null, 
-        min: null, 
-        max: null
+        glucose : {
+            0.1: null,
+            0.25: null,
+            0.5: null, 
+            0.75: null, 
+            0.9: null, 
+            min: null, 
+            max: null
+          },
+        insulin: {
+            0.1: null,
+            0.25: null,
+            0.5: null, 
+            0.75: null, 
+            0.9: null, 
+            min: null, 
+            max: null      
+        }
       },
-      show: false,
-      x: null, 
-      y: null, 
-      width: null, 
-      height: null
+        show: false,
+        x: null, 
+        y: null, 
+        width: null, 
+        height: null
+      } 
     }
-  }
+  
 
   componentDidMount(){
     this.getGlucoseData();
@@ -73,79 +85,113 @@ export default class App extends Component {
     this.getRequest({arg: 'quantile', q: 0.1})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data,
-          0.1: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            0.1: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            0.1: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'quantile', q: 0.25})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data,
-          0.25: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            0.25: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            0.25: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'quantile', q: 0.5})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data,
-          0.5: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            0.5: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            0.5: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'quantile', q: 0.75})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data,
-          0.75: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            0.75: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            0.75: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'quantile', q: 0.9})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data,
-          0.9: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            0.9: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            0.9: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'min'})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data, 
-          // min: resJson.Glu0
-          min: 65
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            min: 65
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            min: resJson.Ins0
+          }
+        }}
     })).catch((err) => console.log(err));
 
     this.getRequest({arg: 'max'})
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot: {
-        data: {
-          ...this.state.plot.data, 
-          max: resJson.Glu0
-        }
-      }
+      plot: { 
+        data:{
+          glucose: {
+            ...this.state.plot.data.glucose,
+            max: resJson.Glu0
+          },
+          insulin:{
+            ...this.state.plot.data.insulin,
+            max: resJson.Ins0
+          }
+        }}
     }))
     .then(() => console.log(this.state.plot.data))
     .catch((err) => console.log(err));
@@ -181,9 +227,9 @@ export default class App extends Component {
   }
 
   createYTicks(x,n){
-    let yr = this.linspace(this.state.plot.data.min, this.state.plot.data.max,n);
-    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-      this.state.plot.data.max, 40, 250);
+    let yr = this.linspace(this.state.plot.data.glucose.min, this.state.plot.data.glucose.max,n);
+    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
+      this.state.plot.data.glucose.max, 40, 250);
     let yp = yr.map((v) => transformer(v));
     let ticks = [];
     for(let i = 0; i < n; i++){
@@ -206,10 +252,10 @@ export default class App extends Component {
   }
 
   createBox(x){
-    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-      this.state.plot.data.max, 40, 250);
-    let y1 = transformer(this.state.plot.data["0.75"]);
-    let y2 = transformer(this.state.plot.data["0.25"]);
+    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
+      this.state.plot.data.glucose.max, 40, 250);
+    let y1 = transformer(this.state.plot.data.glucose["0.75"]);
+    let y2 = transformer(this.state.plot.data.glucose["0.25"]);
     return(<Rect 
               x={x}
               y={y2}
@@ -219,11 +265,11 @@ export default class App extends Component {
   }
 
   createIQRLine(x){
-    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-      this.state.plot.data.max, 40, 250);
-    let iqr = this.state.plot.data[0.75] - this.state.plot.data[0.25];
-    let vmin = this.state.plot.data[0.25] - 1.5*iqr;
-    let vmax = this.state.plot.data[0.75] + 1.5*iqr; 
+    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
+      this.state.plot.data.glucose.max, 40, 250);
+    let iqr = this.state.plot.data.glucose[0.75] - this.state.plot.data.glucose[0.25];
+    let vmin = this.state.plot.data.glucose[0.25] - 1.5*iqr;
+    let vmax = this.state.plot.data.glucose[0.75] + 1.5*iqr; 
     let y1 = transformer(vmin);
     let y2 = transformer(vmax);
     console.log(vmin);
@@ -237,9 +283,9 @@ export default class App extends Component {
   }
 
   createMedianLine(x,m){
-    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-      this.state.plot.data.max, 40, 250);
-    let y = transformer(this.state.plot.data["0.5"]);
+    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
+      this.state.plot.data.glucose.max, 40, 250);
+    let y = transformer(this.state.plot.data.glucose["0.5"]);
     return(<Line
               x1={x}
               y1={y}
@@ -251,8 +297,8 @@ export default class App extends Component {
   }
 
   createGlucoseLevelIndicator(x,m){
-    let transformer = this.generateCoordTransformer(this.state.plot.data.min,
-      this.state.plot.data.max, 40, 250);
+    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
+      this.state.plot.data.glucose.max, 40, 250);
     if(this.state.glucoseLevel != null){
       let y = transformer(this.state.glucoseLevel);
       return(<Line
