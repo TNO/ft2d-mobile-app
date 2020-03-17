@@ -18,6 +18,7 @@ export default class App extends Component {
   state = {
     unit: 'mmol/L',
     glucoseLevel: null,
+    insulinLevel: null,
     diabeticStatus: 'healthy',
     plot: {
       data: {
@@ -251,6 +252,39 @@ export default class App extends Component {
     return ticks;
   }
 
+  _createYTicks(x: number,n: number,type: string ='glucose'){
+    try{
+      let minVal = this.state.plot.data[type].min,
+          maxVal  =this.state.plot.data[type].max;
+      console.log('minvals', minVal);
+      let yr = this.linspace(minVal, maxVal, n);
+      let transformer = this.generateCoordTransformer(minVal, maxVal, 40, 250);
+      let yp = yr.map((v) => transformer(v));
+      let ticks = [];
+      for(let i = 0; i < n; i++){
+        ticks.push(<S.Text x={x-5} y={yp[i]+4} textAnchor='end'>{`${yr[i].toFixed(1)}`}</S.Text>);
+        ticks.push(<Line 
+          x1={x}
+          y1={yp[i]}
+          x2={x-5}
+          y2={yp[i]}
+          stroke='black'
+          />);
+      }
+      ticks.push(<Line 
+        x1={x}
+        y1={yp[0]}
+        x2={x}
+        y2={yp[yp.length-1]}
+        stroke='black'/>);
+      return ticks;
+    } catch(error) {
+      console.log(error);
+      return null;
+    }
+  }
+  
+
   createBox(x){
     let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
       this.state.plot.data.glucose.max, 40, 250);
@@ -262,6 +296,27 @@ export default class App extends Component {
               height={y1-y2}
               width={80}
               opacity={0.4}/>)
+  }
+
+  _createBox(x: number, type: string='glucose'){
+    try{
+      let transformer = this.generateCoordTransformer(
+        this.state.plot.data[type].min,
+        this.state.plot.data[type].max,
+        40, 250
+      );
+      let y1 = transformer(this.state.plot.data[type]['0.75']);
+      let y2 = transformer(this.state.plot.data[type]['0.25']);
+      return(<Rect 
+        x={x}
+        y={y2}
+        height={y1-y2}
+        width={80}
+        opacity={0.4}/>);
+    } catch(error) {
+      console.log(error);
+      return null;
+    }
   }
 
   createIQRLine(x){
@@ -282,6 +337,27 @@ export default class App extends Component {
       opacity={0.4}/>) 
   }
 
+  _createIQRLine(x:number,type='glucose'){
+    try{
+      let transformer = this.generateCoordTransformer(this.state.plot.data[type].min,
+        this.state.plot.data[type].max, 40, 250);
+        let iqr = this.state.plot.data[type][0.75] - this.state.plot.data[type][0.25];
+        let vmin = this.state.plot.data[type][0.25] - 1.5*iqr;
+        let vmax = this.state.plot.data[type][0.75] + 1.5*iqr; 
+        let y1 = transformer(vmin);
+        let y2 = transformer(vmax);
+        return(<Rect 
+          x={x}
+          y={y2}
+          height={y1-y2}
+          width={10}
+          opacity={0.4}/>);    
+    } catch(error) {
+      console.log(error);
+      return null;
+    }
+  }
+
   createMedianLine(x,m){
     let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
       this.state.plot.data.glucose.max, 40, 250);
@@ -294,6 +370,27 @@ export default class App extends Component {
               strokeWidth={2}
               stroke='black'/>)
     
+  }
+
+  _createMedianLine(x:number, m: number, type: string='glucose'){
+    try{
+      let transformer = this.generateCoordTransformer(
+        this.state.plot.data[type].min,
+        this.state.plot.data[type].max, 
+        40, 250
+      ); 
+      let y = transformer(this.state.plot.data[type]['0.5']);
+      return(<Line
+        x1={x}
+        y1={y}
+        x2={x+m}
+        y2={y}
+        strokeWidth={2}
+        stroke='black'/>);
+    } catch(error) {
+      console.log(error);
+      return null; 
+    }
   }
 
   createGlucoseLevelIndicator(x,m){
@@ -314,6 +411,45 @@ export default class App extends Component {
     
   }
 
+  _createLevelIndicator(x: number, m: number, type: string='glucose'){
+    try{
+      let transformer = this.generateCoordTransformer(
+        this.state.plot.data[type].min,
+        this.state.plot.data[type].max, 
+        40, 250
+      );
+      let level; 
+      if(type == 'glucose' && this.state.glucoseLevel != null){
+        level = this.state.glucoseLevel;
+        let y = transformer(level);
+        return(<Line
+          x1={x}
+          y1={y}
+          x2={x+m}
+          y2={y}
+          strokeWidth={3}
+          stroke='red'/>); 
+      }
+      if(type == 'insulin' && this.state.insulinLevel != null){
+        level = this.state.insulinLevel;
+        let y = transformer(level);
+        return(<Line
+          x1={x}
+          y1={y}
+          x2={x+m}
+          y2={y}
+          strokeWidth={3}
+          stroke='red'/>); 
+      } else {
+        return null;
+      }
+
+    } catch(error) {
+      console.log(error);
+      return null;
+    }
+  }
+
   
 
 
@@ -330,18 +466,30 @@ export default class App extends Component {
                     <Svg 
                       style={{backgroundColor: 'white', flex:1}}
                     >
-                      {this.createYTicks(50,6)}
-                      {this.createBox(60)}
-                      {this.createIQRLine(60)}
+                      {this._createYTicks(50,6)}
+                      {this._createBox(60)}
+                      {this._createIQRLine(60)}
                       {this.createMedianLine(60,95)}
-                      {this.createGlucoseLevelIndicator(60,95)}
+                      {this._createLevelIndicator(60,95)}
 
                     </Svg>
 
                 ) : null }
               </View>
               <View style={{ backgroundColor: 'orange', flex:1 }}>
-                <View style={{ flex:1 }}>
+                <View style={{ flex:1, height: '100%' }}>
+                  { this.state.plot.show ? (
+                    <Svg
+                    style={{backgroundColor: 'white', flex: 1}}
+                    onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}
+                    >
+                      {this._createYTicks(50,6,'insulin')}
+                      {this._createBox(60,'insulin')}
+                      {this._createIQRLine(60,'insulin')}
+                      {this._createLevelIndicator(60,95,'insulin')}
+
+                    </Svg>
+                  ) : null}
                 </View>
               </View>
             </View>
