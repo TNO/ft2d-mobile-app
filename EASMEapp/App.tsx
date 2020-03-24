@@ -39,18 +39,20 @@ export default class App extends Component {
             0.9: null, 
             min: null, 
             max: null      
-        }
+        },
+        ml: null
       },
         show: false,
         x: null, 
         y: null, 
         width: null, 
         height: null
-      } 
+      }
     }
   
 
   componentDidMount(){
+    this.getRegressionResults();
     this.getGlucoseData();
   }
 
@@ -81,6 +83,25 @@ export default class App extends Component {
     })
   }
 
+  getRegressionResults = () => {
+    this.getRequest({
+      study_code: 'Diclofenac',
+      arg: 'ml',
+      X: 'Glu0',
+      y: 'Ins0',
+      method: 'linear_regression'
+    })
+    .then((response) => response.json())
+    .then((resJson) => this.setState({
+      plot:{
+        data:{
+          ...this.state.plot.data,
+          ml: resJson
+        }
+      }
+    }))
+    .catch((err) => console.log(err))
+  }
   getGlucoseData = () => {
 
     this.getRequest({arg: 'quantile', q: 0.1})
