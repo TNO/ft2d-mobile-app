@@ -40,27 +40,28 @@ export default class App extends Component {
             min: null, 
             max: null      
         },
-        ml: null
       },
         show: false,
         x: null, 
         y: null, 
         width: null, 
         height: null
-      }
+      },
+    ml: null
     }
   
 
   componentDidMount(){
-    this.getRegressionResults();
     this.getGlucoseData();
+    console.log(this.state.plot.data);
   }
 
   onPress = () => {
+    this.getRegressionResults();
     this.setState({plot:{
       ...this.state.plot,
       show: true}});
-    console.log(this.state.plot.data);
+      // console.log(this.state.plot.data);
 
   }
 
@@ -93,15 +94,13 @@ export default class App extends Component {
     })
     .then((response) => response.json())
     .then((resJson) => this.setState({
-      plot:{
-        data:{
-          ...this.state.plot.data,
-          ml: resJson
-        }
-      }
+      ...this.state,
+      ml: resJson
     }))
     .catch((err) => console.log(err))
+    console.log(this.state.ml);
   }
+
   getGlucoseData = () => {
 
     this.getRequest({arg: 'quantile', q: 0.1})
@@ -248,31 +247,6 @@ export default class App extends Component {
     return arr;
   }
 
-  createYTicks(x,n){
-    let yr = this.linspace(this.state.plot.data.glucose.min, this.state.plot.data.glucose.max,n);
-    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
-      this.state.plot.data.glucose.max, 40, 250);
-    let yp = yr.map((v) => transformer(v));
-    let ticks = [];
-    for(let i = 0; i < n; i++){
-      ticks.push(<S.Text x={x-5} y={yp[i]+4} textAnchor='end'>{`${yr[i].toFixed(1)}`}</S.Text>);
-      ticks.push(<Line 
-                  x1={x}
-                  y1={yp[i]}
-                  x2={x-5}
-                  y2={yp[i]}
-                  stroke='black'
-                  />)
-    }
-    ticks.push(<Line 
-                  x1={x}
-                  y1={yp[0]}
-                  x2={x}
-                  y2={yp[yp.length-1]}
-                  stroke='black'/>)
-    return ticks;
-  }
-
   _createYTicks(x: number,n: number,type: string ='glucose'){
     try{
       let minVal = this.state.plot.data[type].min,
@@ -379,20 +353,6 @@ export default class App extends Component {
     }
   }
 
-  createMedianLine(x,m){
-    let transformer = this.generateCoordTransformer(this.state.plot.data.glucose.min,
-      this.state.plot.data.glucose.max, 40, 250);
-    let y = transformer(this.state.plot.data.glucose["0.5"]);
-    return(<Line
-              x1={x}
-              y1={y}
-              x2={x+m}
-              y2={y}
-              strokeWidth={2}
-              stroke='black'/>)
-    
-  }
-
   _createMedianLine(x:number, m: number, type: string='glucose'){
     try{
       let transformer = this.generateCoordTransformer(
@@ -440,7 +400,9 @@ export default class App extends Component {
         40, 250
       );
       let level; 
-      if(type == 'glucose' && this.state.glucoseLevel != null){
+      if(type == 'glucose' && this.state.glucoseLevel != null && 
+      this.state.glucoseLevel >= this.state.plot.data.glucose.min && 
+      this.state.glucoseLevel <= this.state.plot.data.glucose.max){
         level = this.state.glucoseLevel;
         let y = transformer(level);
         return(<Line
@@ -451,8 +413,12 @@ export default class App extends Component {
           strokeWidth={3}
           stroke='red'/>); 
       }
-      if(type == 'insulin' && this.state.insulinLevel != null){
-        level = this.state.insulinLevel;
+      if(type == 'insulin'){
+        let a = this.state.ml.m,
+            b = this.state.ml.n;
+        console.log("a: " + a);
+        console.log("b: " + b);
+        level = a*this.state.glucoseLevel + b;
         let y = transformer(level);
         return(<Line
           x1={x}
@@ -475,13 +441,14 @@ export default class App extends Component {
 
 
   render(){
+    
     return(
       <KeyboardAvoidingView 
         behavior="padding" 
         style={{ backgroundColor: 'white', flex: 1, flexDirection: 'column' }}
         keyboardVerticalOffset={-30}>
-            <View style={{ backgroundColor: 'steelblue',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
-              <View style={{ backgroundColor: 'grey', flex:1,height:'100%' }}
+            <View style={{ backgroundColor: 'none',width:'100%',height:'50%', flex: 1, flexDirection: 'row' }}>
+              <View style={{ backgroundColor: 'none', flex:1,height:'100%' }}
                     onLayout={(event) => { this.getPlotCanvasDimensions(event.nativeEvent.layout) }}>
                 { this.state.plot.show ? (
                     <Svg 
@@ -490,14 +457,14 @@ export default class App extends Component {
                       {this._createYTicks(50,6)}
                       {this._createBox(60)}
                       {this._createIQRLine(60)}
-                      {this.createMedianLine(60,95)}
+                      {this._createMedianLine(60,95)}
                       {this._createLevelIndicator(60,95)}
 
                     </Svg>
 
                 ) : null }
               </View>
-              <View style={{ backgroundColor: 'orange', flex:1 }}>
+              <View style={{ backgroundColor: 'none', flex:1 }}>
                 <View style={{ flex:1, height: '100%' }}>
                   { this.state.plot.show ? (
                     <Svg
@@ -507,6 +474,7 @@ export default class App extends Component {
                       {this._createYTicks(50,6,'insulin')}
                       {this._createBox(60,'insulin')}
                       {this._createIQRLine(60,'insulin')}
+                      {this._createMedianLine(60,95,'insulin')}
                       {this._createLevelIndicator(60,95,'insulin')}
 
                     </Svg>
