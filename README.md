@@ -1,8 +1,6 @@
 # EASME Demonstrator Mobile App 
 
 This mobile app is developed with the purpose demonstrating the capabilities of EASME Big Data and B2B Web platform. It takes the blood glucose level measurement from the user and shows where the user is within the scale. Also, it estimates the insulin level by requesting a linear regression from EASME platfrom. 
-<img src="https://gitlab-dv.tno.nl/ozsezens/easme-demonstrator/-/blob/master/Screenshot_20200602-134603_Expo.png" width=30%>
-<img src="https://gitlab-dv.tno.nl/ozsezens/easme-demonstrator/-/blob/master/Screenshot_20200602-134616_Expo.png" width=30%>
 
 ## Installation and testing 
 App is written in Typescript using React Native. You need to have Node.js (> 10) and npm installed. First install Typescript and Expo client (for React Native) 
