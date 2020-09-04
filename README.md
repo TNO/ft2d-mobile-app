@@ -1,6 +1,6 @@
-# EASME Demonstrator Mobile App 
+# FT2D Demonstrator Mobile App 
 
-This mobile app is developed with the purpose demonstrating the capabilities of EASME Big Data and B2B Web platform. It takes the blood glucose level measurement from the user and shows where the user is within the scale. Also, it estimates the insulin level by requesting a linear regression from EASME platfrom. 
+This mobile app is developed with the purpose demonstrating the capabilities of [FT2D](https://dashin.eu/ft2d) Big Data and B2B Web platform. It takes the blood glucose level measurement from the user and shows where the user is within the scale. Also, it estimates the insulin level by requesting a linear regression from FT2D platfrom. 
 
 ## Installation and testing 
 App is written in Typescript using React Native. You need to have Node.js (> 10) and npm installed. First install Typescript and Expo client (for React Native) 
