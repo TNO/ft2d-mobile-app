@@ -21,7 +21,7 @@ expo start
 When Expo starts, it will show a web page which will allow you to test the app either on browser or a mobile device. To test the app in mobile device, you need to have Android SDK installed. 
 
 In addition you need to replace the `***REMOVED***` string with your API token you obtained from [FT2D](https://dashin.eu/ft2d) in `App.tsx` file (see below).
-```javascript
+```typescript
 getRequest = (args: Object): Promise<Response> => {
   let requestArguments = [];
   for(let [key,value] of Object.entries(args)){
